@@ -495,6 +495,7 @@ namespace CodexUsagePill
             if (!form.IsDragging)
                 form.Location = new Point(rect.Left + xOffset, rect.Top + yOffset);
             if (!form.Visible) form.ShowInactive();
+            NativeMethods.PlaceImmediatelyAbove(form.Handle, window);
         }
 
         private void SavePosition()
@@ -628,7 +629,6 @@ namespace CodexUsagePill
             MaximumSize = ClientSize;
             ShowInTaskbar = standalonePreview;
             StartPosition = FormStartPosition.Manual;
-            TopMost = !standalonePreview;
             Text = standalonePreview ? "Codex Usage Pill Preview" : "Codex Usage Pill";
             BackColor = Color.FromArgb(244, 251, 245);
             DoubleBuffered = true;
@@ -861,6 +861,24 @@ namespace CodexUsagePill
 
         [DllImport("user32.dll")]
         internal static extern bool ShowWindow(IntPtr hWnd, int command);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter,
+            int x, int y, int width, int height, uint flags);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetWindow(IntPtr hWnd, uint command);
+
+        internal static void PlaceImmediatelyAbove(IntPtr window, IntPtr referenceWindow)
+        {
+            const uint SwpNoSize = 0x0001;
+            const uint SwpNoMove = 0x0002;
+            const uint SwpNoActivate = 0x0010;
+            const uint GwHwndPrevious = 3;
+            IntPtr insertAfter = GetWindow(referenceWindow, GwHwndPrevious);
+            if (insertAfter == window) return;
+            SetWindowPos(window, insertAfter, 0, 0, 0, 0, SwpNoSize | SwpNoMove | SwpNoActivate);
+        }
 
         [DllImport("user32.dll")]
         private static extern bool SetProcessDpiAwarenessContext(IntPtr value);

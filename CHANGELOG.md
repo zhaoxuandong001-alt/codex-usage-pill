@@ -5,6 +5,7 @@ All notable changes to this project are documented here.
 ## 1.0.1 - 2026-07-21
 
 - Keep the pill visible when focus moves from Codex to another application.
+- Keep the pill directly above Codex in the window stack instead of globally topmost, so overlapping windows cover it.
 - Continue hiding the pill when Codex is closed or minimized.
 
 ## 1.0.0 - 2026-07-21

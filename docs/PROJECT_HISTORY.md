@@ -20,7 +20,7 @@ The first versions proved the data path and window tracking. Later iterations ad
 2. tray controls and single-instance behavior;
 3. green, amber, red, and unavailable states;
 4. hover details for both short and weekly windows;
-5. foreground-only visibility at first, later changed so usage remains visible while working in other apps;
+5. foreground-only visibility at first, later replaced with Codex-adjacent Z-order so it remains visible on another monitor without floating over windows that cover Codex;
 6. per-monitor DPI handling after Windows scaled an intended `102 × 29` layout to `136 × 39`;
 7. a final physical size of `102 × 29` pixels, matching the compact reference design.
 
