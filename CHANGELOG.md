@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here.
 
+## 1.0.2 - 2026-07-21
+
+- Find the real Codex main window when newer desktop versions expose additional small top-level windows.
+- Restore drag-to-position behavior after the Codex desktop update.
+
 ## 1.0.1 - 2026-07-21
 
 - Keep the pill visible when focus moves from Codex to another application.

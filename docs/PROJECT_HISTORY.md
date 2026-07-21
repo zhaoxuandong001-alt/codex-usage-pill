@@ -22,7 +22,8 @@ The first versions proved the data path and window tracking. Later iterations ad
 4. hover details for both short and weekly windows;
 5. foreground-only visibility at first, later replaced with Codex-adjacent Z-order so it remains visible on another monitor without floating over windows that cover Codex;
 6. per-monitor DPI handling after Windows scaled an intended `102 × 29` layout to `136 × 39`;
-7. a final physical size of `102 × 29` pixels, matching the compact reference design.
+7. a final physical size of `102 × 29` pixels, matching the compact reference design;
+8. top-level window enumeration after a Codex update added a small auxiliary window that could otherwise capture the pill's position.
 
 ## Typography
 
