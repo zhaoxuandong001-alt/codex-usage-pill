@@ -1,0 +1,7 @@
+/dist/
+*.user
+*.suo
+*.pdb
+*.log
+.vs/
+.vscode/
