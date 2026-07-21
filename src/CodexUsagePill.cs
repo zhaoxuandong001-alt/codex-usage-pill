@@ -16,8 +16,8 @@ using System.Windows.Forms;
 [assembly: AssemblyTitle("Codex Usage Pill")]
 [assembly: AssemblyDescription("A small Windows overlay for Codex rate-limit remaining percentage.")]
 [assembly: AssemblyProduct("Codex Usage Pill")]
-[assembly: AssemblyVersion("1.0.1.0")]
-[assembly: AssemblyFileVersion("1.0.1.0")]
+[assembly: AssemblyVersion("1.0.2.0")]
+[assembly: AssemblyFileVersion("1.0.2.0")]
 
 namespace CodexUsagePill
 {
@@ -822,28 +822,50 @@ namespace CodexUsagePill
     {
         public static IntPtr FindMainWindow()
         {
+            var processIds = new HashSet<int>();
             foreach (Process process in Process.GetProcessesByName("ChatGPT"))
             {
                 try
                 {
-                    if (process.MainWindowHandle == IntPtr.Zero) continue;
                     string path = process.MainModule.FileName;
                     if (path.IndexOf("OpenAI.Codex", StringComparison.OrdinalIgnoreCase) >= 0)
-                        return process.MainWindowHandle;
+                        processIds.Add(process.Id);
                 }
-                catch
-                {
-                    if (process.MainWindowHandle != IntPtr.Zero &&
-                        string.Equals(process.MainWindowTitle, "ChatGPT", StringComparison.OrdinalIgnoreCase))
-                        return process.MainWindowHandle;
-                }
+                catch { }
             }
-            return IntPtr.Zero;
+
+            IntPtr bestWindow = IntPtr.Zero;
+            long bestArea = 0;
+            NativeMethods.EnumWindows(delegate(IntPtr window, IntPtr parameter)
+            {
+                uint processId;
+                NativeMethods.GetWindowThreadProcessId(window, out processId);
+                if (!processIds.Contains((int)processId) ||
+                    !NativeMethods.IsWindowVisible(window) || NativeMethods.IsIconic(window))
+                    return true;
+
+                NativeMethods.Rect rect;
+                if (!NativeMethods.GetWindowRect(window, out rect)) return true;
+                int width = rect.Right - rect.Left;
+                int height = rect.Bottom - rect.Top;
+                if (width < 300 || height < 200) return true;
+
+                long area = (long)width * height;
+                if (area > bestArea)
+                {
+                    bestArea = area;
+                    bestWindow = window;
+                }
+                return true;
+            }, IntPtr.Zero);
+            return bestWindow;
         }
     }
 
     internal static class NativeMethods
     {
+        internal delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
         [StructLayout(LayoutKind.Sequential)]
         internal struct Rect
         {
@@ -855,6 +877,15 @@ namespace CodexUsagePill
 
         [DllImport("user32.dll")]
         internal static extern bool GetWindowRect(IntPtr hWnd, out Rect rect);
+
+        [DllImport("user32.dll")]
+        internal static extern bool EnumWindows(EnumWindowsProc callback, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        internal static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        internal static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
         [DllImport("user32.dll")]
         internal static extern bool IsIconic(IntPtr hWnd);
