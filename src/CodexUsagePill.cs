@@ -16,8 +16,8 @@ using System.Windows.Forms;
 [assembly: AssemblyTitle("Codex Usage Pill")]
 [assembly: AssemblyDescription("A small Windows overlay for Codex rate-limit remaining percentage.")]
 [assembly: AssemblyProduct("Codex Usage Pill")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.0.1.0")]
+[assembly: AssemblyFileVersion("1.0.1.0")]
 
 namespace CodexUsagePill
 {
@@ -478,13 +478,6 @@ namespace CodexUsagePill
                 return;
             }
 
-            IntPtr foreground = NativeMethods.GetAncestor(NativeMethods.GetForegroundWindow(), 2);
-            if (foreground != window)
-            {
-                form.Hide();
-                return;
-            }
-
             NativeMethods.Rect rect;
             if (!NativeMethods.GetWindowRect(window, out rect))
             {
@@ -865,12 +858,6 @@ namespace CodexUsagePill
 
         [DllImport("user32.dll")]
         internal static extern bool IsIconic(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        internal static extern IntPtr GetForegroundWindow();
-
-        [DllImport("user32.dll")]
-        internal static extern IntPtr GetAncestor(IntPtr hWnd, uint flags);
 
         [DllImport("user32.dll")]
         internal static extern bool ShowWindow(IntPtr hWnd, int command);

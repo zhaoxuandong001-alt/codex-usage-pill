@@ -11,7 +11,7 @@ A tiny, unofficial Windows overlay that keeps your Codex usage remaining visible
 ## Features
 
 - Shows the remaining percentage for the weekly Codex usage window.
-- Follows the Codex desktop window and hides when Codex is not active.
+- Stays visible over other apps while Codex is running, and hides when Codex is closed or minimized.
 - Uses a compact `102 × 29` pixel pill that can be dragged anywhere inside the Codex window.
 - Remembers its position between launches.
 - Shows 5-hour and weekly windows, reset times, and last refresh time on hover.
@@ -36,7 +36,7 @@ A tiny, unofficial Windows overlay that keeps your Codex usage remaining visible
    ```
 
 3. Run `CodexUsagePill.exe`.
-4. Bring the Codex desktop app to the foreground. The pill appears inside the Codex window.
+4. Open the Codex desktop app. The pill stays visible even when you switch to another application.
 
 The release executable is not code-signed. Windows may show a SmartScreen warning for a newly published build. Review the source and checksum before deciding whether to run it.
 
