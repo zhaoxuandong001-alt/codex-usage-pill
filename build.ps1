@@ -5,6 +5,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sourcePath = Join-Path $projectRoot 'src\CodexUsagePill.cs'
 $iconPath = Join-Path $projectRoot 'assets\CodexUsagePill.ico'
+$installerPath = Join-Path $projectRoot 'install.ps1'
 $outputDirectory = Join-Path $projectRoot 'dist'
 $outputPath = Join-Path $outputDirectory 'CodexUsagePill.exe'
 $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
@@ -28,7 +29,11 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $hash = (Get-FileHash -LiteralPath $outputPath -Algorithm SHA256).Hash.ToLowerInvariant()
-Set-Content -LiteralPath (Join-Path $outputDirectory 'SHA256SUMS.txt') -Value "$hash  CodexUsagePill.exe" -Encoding Ascii
+$installerHash = (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash.ToLowerInvariant()
+Set-Content -LiteralPath (Join-Path $outputDirectory 'SHA256SUMS.txt') -Value @(
+    "$hash  CodexUsagePill.exe"
+    "$installerHash  install.ps1"
+) -Encoding Ascii
 
 Write-Host "Built $outputPath"
 Write-Host "SHA256 $hash"

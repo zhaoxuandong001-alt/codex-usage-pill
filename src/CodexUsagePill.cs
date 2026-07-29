@@ -16,8 +16,8 @@ using System.Windows.Forms;
 [assembly: AssemblyTitle("Codex Usage Pill")]
 [assembly: AssemblyDescription("A small Windows overlay for Codex rate-limit remaining percentage.")]
 [assembly: AssemblyProduct("Codex Usage Pill")]
-[assembly: AssemblyVersion("1.0.2.0")]
-[assembly: AssemblyFileVersion("1.0.2.0")]
+[assembly: AssemblyVersion("1.0.3.0")]
+[assembly: AssemblyFileVersion("1.0.3.0")]
 
 namespace CodexUsagePill
 {
@@ -367,6 +367,8 @@ namespace CodexUsagePill
         private readonly System.Windows.Forms.Timer refreshTimer;
         private readonly System.Windows.Forms.Timer loginTimer;
         private Point? customOffset;
+        private DateTime? codexMissingSince;
+        private bool codexWasFound;
         private int refreshing;
 
         public UsagePillContext(bool preview)
@@ -472,7 +474,20 @@ namespace CodexUsagePill
         private void UpdatePosition()
         {
             IntPtr window = CodexWindow.FindMainWindow();
-            if (window == IntPtr.Zero || NativeMethods.IsIconic(window))
+            if (window == IntPtr.Zero)
+            {
+                form.Hide();
+                if (codexWasFound)
+                {
+                    if (!codexMissingSince.HasValue) codexMissingSince = DateTime.UtcNow;
+                    else if (DateTime.UtcNow - codexMissingSince.Value >= TimeSpan.FromSeconds(5)) Exit();
+                }
+                return;
+            }
+
+            codexWasFound = true;
+            codexMissingSince = null;
+            if (NativeMethods.IsIconic(window))
             {
                 form.Hide();
                 return;
@@ -840,12 +855,20 @@ namespace CodexUsagePill
             {
                 uint processId;
                 NativeMethods.GetWindowThreadProcessId(window, out processId);
-                if (!processIds.Contains((int)processId) ||
-                    !NativeMethods.IsWindowVisible(window) || NativeMethods.IsIconic(window))
+                if (!processIds.Contains((int)processId) || !NativeMethods.IsWindowVisible(window))
                     return true;
 
                 NativeMethods.Rect rect;
-                if (!NativeMethods.GetWindowRect(window, out rect)) return true;
+                if (NativeMethods.IsIconic(window))
+                {
+                    var placement = new NativeMethods.WindowPlacement
+                    {
+                        Length = Marshal.SizeOf(typeof(NativeMethods.WindowPlacement))
+                    };
+                    if (!NativeMethods.GetWindowPlacement(window, ref placement)) return true;
+                    rect = placement.NormalPosition;
+                }
+                else if (!NativeMethods.GetWindowRect(window, out rect)) return true;
                 int width = rect.Right - rect.Left;
                 int height = rect.Bottom - rect.Top;
                 if (width < 300 || height < 200) return true;
@@ -875,8 +898,29 @@ namespace CodexUsagePill
             public int Bottom;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct NativePoint
+        {
+            public int X;
+            public int Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct WindowPlacement
+        {
+            public int Length;
+            public int Flags;
+            public int ShowCommand;
+            public NativePoint MinPosition;
+            public NativePoint MaxPosition;
+            public Rect NormalPosition;
+        }
+
         [DllImport("user32.dll")]
         internal static extern bool GetWindowRect(IntPtr hWnd, out Rect rect);
+
+        [DllImport("user32.dll")]
+        internal static extern bool GetWindowPlacement(IntPtr hWnd, ref WindowPlacement placement);
 
         [DllImport("user32.dll")]
         internal static extern bool EnumWindows(EnumWindowsProc callback, IntPtr lParam);

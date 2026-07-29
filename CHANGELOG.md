@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## 1.0.3 - 2026-07-29
+
+- Add an installer that starts the pill from the native Codex application launch event instead of Windows startup.
+- Exit the pill five seconds after a previously detected Codex window closes.
+- Keep the pill alive but hidden while Codex is minimized.
+
 ## 1.0.2 - 2026-07-21
 
 - Find the real Codex main window when newer desktop versions expose additional small top-level windows.

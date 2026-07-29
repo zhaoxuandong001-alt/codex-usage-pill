@@ -18,7 +18,8 @@ A tiny, unofficial Windows overlay that keeps your Codex usage remaining visible
 - Changes from green to amber to red as remaining usage drops.
 - Refreshes every five minutes, with manual refresh from the tray icon.
 - Supports Codex sign-in without reading browser cookies or handling tokens itself.
-- Runs as a single instance and uses no installer or background service.
+- Can start from Codex's Windows launch event and exit after Codex closes, with no resident watcher or service.
+- Runs as a single instance.
 
 ## Requirements
 
@@ -28,24 +29,28 @@ A tiny, unofficial Windows overlay that keeps your Codex usage remaining visible
 
 ## Install
 
-1. Download `CodexUsagePill.exe` and `SHA256SUMS.txt` from the [latest release](https://github.com/zhaoxuandong001-alt/codex-usage-pill/releases/latest).
+1. Download `CodexUsagePill.exe`, `install.ps1`, and `SHA256SUMS.txt` from the [latest release](https://github.com/zhaoxuandong001-alt/codex-usage-pill/releases/latest) into the same folder.
 2. Optionally verify the SHA-256 checksum:
 
    ```powershell
    Get-FileHash .\CodexUsagePill.exe -Algorithm SHA256
    ```
 
-3. Run `CodexUsagePill.exe`.
-4. Open the Codex desktop app. The pill remains on its monitor while you work elsewhere, without floating over windows that cover Codex.
+3. Install the event-triggered launcher:
+
+   ```powershell
+   powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
+   ```
+
+4. Open the Codex desktop app. Windows starts the pill automatically. Closing Codex also exits the pill after a five-second grace period.
 
 The release executable is not code-signed. Windows may show a SmartScreen warning for a newly published build. Review the source and checksum before deciding whether to run it.
 
-### Start with Windows
+### Manual use
 
-The app does not add itself to startup. To opt in:
+You can run `CodexUsagePill.exe` directly without installing the automatic launcher. It waits for Codex to open and exits after a previously detected Codex window closes.
 
-1. Press `Win + R` and open `shell:startup`.
-2. Place a shortcut to `CodexUsagePill.exe` in that folder.
+The installer registers a per-user Windows event task named `Codex Usage Pill - Start with Codex`. It does not add the pill to Windows startup.
 
 ## Controls
 
@@ -67,6 +72,8 @@ It does **not**:
 - modify Codex files or settings.
 
 The app stores only the pill's last position in `%LOCALAPPDATA%\CodexUsagePill\position.txt`.
+
+Automatic launch uses the Windows `Microsoft-Windows-AppModel-Runtime/Admin` event log to detect the stable Codex application identifier. No polling process runs in the background before Codex starts.
 
 ## Build from source
 
@@ -94,7 +101,7 @@ Useful diagnostic switches:
 
 **The pill does not appear**
 
-- Make sure the Codex desktop window is open, restored, and in the foreground.
+- Make sure the Codex desktop window is open and restored.
 - Check the hidden-icons area of the Windows taskbar for the green `C` icon.
 - Right-click the tray icon and choose **Reset position**.
 
