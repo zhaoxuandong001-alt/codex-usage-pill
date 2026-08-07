@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here.
 
+## 1.0.4 - 2026-08-07
+
+- Restore live usage refreshes with current Codex versions by writing BOM-free UTF-8 to the app server.
+- Match the pill border to the green, amber, red, and unavailable status colors.
+
 ## 1.0.3 - 2026-07-29
 
 - Add an installer that starts the pill from the native Codex application launch event instead of Windows startup.

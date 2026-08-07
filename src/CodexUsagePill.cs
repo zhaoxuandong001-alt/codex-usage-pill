@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
@@ -16,8 +17,8 @@ using System.Windows.Forms;
 [assembly: AssemblyTitle("Codex Usage Pill")]
 [assembly: AssemblyDescription("A small Windows overlay for Codex rate-limit remaining percentage.")]
 [assembly: AssemblyProduct("Codex Usage Pill")]
-[assembly: AssemblyVersion("1.0.3.0")]
-[assembly: AssemblyFileVersion("1.0.3.0")]
+[assembly: AssemblyVersion("1.0.4.0")]
+[assembly: AssemblyFileVersion("1.0.4.0")]
 
 namespace CodexUsagePill
 {
@@ -298,8 +299,9 @@ namespace CodexUsagePill
 
         private static void Send(Process process, object message)
         {
-            process.StandardInput.WriteLine(Json.Serialize(message));
-            process.StandardInput.Flush();
+            byte[] bytes = new UTF8Encoding(false).GetBytes(Json.Serialize(message) + "\n");
+            process.StandardInput.BaseStream.Write(bytes, 0, bytes.Length);
+            process.StandardInput.BaseStream.Flush();
         }
 
         private static Dictionary<string, object> DeserializeDictionary(string json)
@@ -627,6 +629,7 @@ namespace CodexUsagePill
         private readonly Label label;
         private readonly ToolTip tooltip;
         private readonly bool standalonePreview;
+        private Color borderColor = Color.FromArgb(185, 226, 190);
         private Point dragCursorStart;
         private Point dragFormStart;
 
@@ -694,7 +697,7 @@ namespace CodexUsagePill
             base.OnPaint(e);
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             using (GraphicsPath path = RoundedPath(ClientRectangle, 14))
-            using (var pen = new Pen(Color.FromArgb(185, 226, 190), 1.2f))
+            using (var pen = new Pen(borderColor, 1.2f))
             {
                 e.Graphics.DrawPath(pen, path);
             }
@@ -745,6 +748,7 @@ namespace CodexUsagePill
                 label.Text = "Codex —";
                 label.ForeColor = Color.FromArgb(111, 117, 116);
                 BackColor = Color.FromArgb(246, 247, 247);
+                borderColor = Color.FromArgb(205, 210, 209);
                 tooltip.SetToolTip(label, snapshot.AuthenticationRequired
                     ? "Sign in to Codex CLI first.\nRight-click the tray icon and choose ‘Sign in to Codex…’."
                     : snapshot.Error);
@@ -765,16 +769,19 @@ namespace CodexUsagePill
             {
                 label.ForeColor = Color.FromArgb(205, 64, 64);
                 BackColor = Color.FromArgb(255, 246, 246);
+                borderColor = Color.FromArgb(239, 183, 183);
             }
             else if (warning < 50)
             {
                 label.ForeColor = Color.FromArgb(191, 133, 31);
                 BackColor = Color.FromArgb(255, 250, 238);
+                borderColor = Color.FromArgb(239, 213, 159);
             }
             else
             {
                 label.ForeColor = Color.FromArgb(68, 181, 91);
                 BackColor = Color.FromArgb(244, 251, 245);
+                borderColor = Color.FromArgb(185, 226, 190);
             }
 
             tooltip.SetToolTip(label, BuildTooltip(snapshot));
