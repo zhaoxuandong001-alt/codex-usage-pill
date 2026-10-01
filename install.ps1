@@ -79,3 +79,5 @@ if ($codexRunning) {
 Write-Host "Installed $installedPath"
 Write-Host "Registered task: $taskName"
 Write-Host "Desktop shortcut: $desktopShortcut"
+Write-Host 'Automatic layout: weekly-only accounts show vertical Codex; accounts with five-hour and weekly limits show 5h above vertical Week.'
+Write-Host 'The same installer supports both layouts. Plan changes take effect on the next successful refresh; no reinstall is needed.'

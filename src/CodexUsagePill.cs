@@ -17,8 +17,8 @@ using System.Windows.Forms;
 [assembly: AssemblyTitle("Codex Usage Pill")]
 [assembly: AssemblyDescription("A small Windows overlay for Codex rate-limit remaining percentage.")]
 [assembly: AssemblyProduct("Codex Usage Pill")]
-[assembly: AssemblyVersion("1.0.4.0")]
-[assembly: AssemblyFileVersion("1.0.4.0")]
+[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]
 
 namespace CodexUsagePill
 {
@@ -239,7 +239,8 @@ namespace CodexUsagePill
 
         private static UsageSnapshot ParseSnapshot(Dictionary<string, object> result)
         {
-            Dictionary<string, object> limits = GetDictionary(result, "rateLimits");
+            Dictionary<string, object> limits = GetDictionary(GetDictionary(result, "rateLimitsByLimitId"), "codex")
+                ?? GetDictionary(result, "rateLimits");
             if (limits == null) return UsageSnapshot.Failure("Codex did not return a usage window.", false);
 
             Dictionary<string, object> primary = GetDictionary(limits, "primary");
@@ -342,10 +343,12 @@ namespace CodexUsagePill
 
         private static ProcessStartInfo CreateCodexStartInfo(string codexPath, string arguments, bool redirect)
         {
-            var start = new ProcessStartInfo
+            string command = "set CODEX_INTERNAL_ORIGINATOR_OVERRIDE=& set CODEX_SHELL=& set CODEX_THREAD_ID=& "
+                + "\"" + codexPath + "\" " + arguments;
+            return new ProcessStartInfo
             {
-                FileName = codexPath,
-                Arguments = arguments,
+                FileName = Environment.GetEnvironmentVariable("ComSpec") ?? @"C:\Windows\System32\cmd.exe",
+                Arguments = "/d /s /c \"" + command + "\"",
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden,
@@ -353,10 +356,6 @@ namespace CodexUsagePill
                 RedirectStandardOutput = redirect,
                 RedirectStandardError = redirect
             };
-            start.EnvironmentVariables.Remove("CODEX_INTERNAL_ORIGINATOR_OVERRIDE");
-            start.EnvironmentVariables.Remove("CODEX_SHELL");
-            start.EnvironmentVariables.Remove("CODEX_THREAD_ID");
-            return start;
         }
     }
 
@@ -504,10 +503,14 @@ namespace CodexUsagePill
 
             int windowWidth = rect.Right - rect.Left;
             int windowHeight = rect.Bottom - rect.Top;
+            Point clientOrigin = Point.Empty;
+            NativeMethods.Rect clientRect;
+            bool hasClientRect = NativeMethods.GetClientRect(window, out clientRect)
+                && NativeMethods.ClientToScreen(window, ref clientOrigin);
             Point offset = customOffset ?? new Point(
-                Math.Min(220, Math.Max(16, windowWidth - form.Width - 42)),
-                windowHeight - form.Height - 27);
-            int xOffset = Math.Max(8, Math.Min(offset.X, Math.Max(8, windowWidth - form.Width - 8)));
+                hasClientRect ? clientOrigin.X - rect.Left + 3 : 3,
+                (hasClientRect ? clientOrigin.Y - rect.Top + clientRect.Bottom : windowHeight) - form.Height - 52);
+            int xOffset = Math.Max(3, Math.Min(offset.X, Math.Max(3, windowWidth - form.Width - 3)));
             int yOffset = Math.Max(8, Math.Min(offset.Y, Math.Max(8, windowHeight - form.Height - 8)));
             if (!form.IsDragging)
                 form.Location = new Point(rect.Left + xOffset, rect.Top + yOffset);
@@ -524,7 +527,7 @@ namespace CodexUsagePill
             int windowWidth = rect.Right - rect.Left;
             int windowHeight = rect.Bottom - rect.Top;
             customOffset = new Point(
-                Math.Max(8, Math.Min(form.Left - rect.Left, Math.Max(8, windowWidth - form.Width - 8))),
+                Math.Max(3, Math.Min(form.Left - rect.Left, Math.Max(3, windowWidth - form.Width - 3))),
                 Math.Max(8, Math.Min(form.Top - rect.Top, Math.Max(8, windowHeight - form.Height - 8))));
             PositionStore.Save(customOffset.Value);
         }
@@ -584,7 +587,7 @@ namespace CodexUsagePill
     {
         private static readonly string FilePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "CodexUsagePill", "position.txt");
+            "CodexUsagePill", "sidebar-position.txt");
 
         public static Point? Load()
         {
@@ -626,10 +629,16 @@ namespace CodexUsagePill
 
     internal sealed class PillForm : Form
     {
-        private readonly Label label;
         private readonly ToolTip tooltip;
         private readonly bool standalonePreview;
-        private Color borderColor = Color.FromArgb(185, 226, 190);
+        private readonly Font percentFont;
+        private bool showShort;
+        private bool showWeekly;
+        private int? shortRemaining;
+        private int? weeklyRemaining;
+        private int? singleRemaining;
+        private Rectangle shortBounds;
+        private Rectangle mainBounds;
         private Point dragCursorStart;
         private Point dragFormStart;
 
@@ -642,31 +651,17 @@ namespace CodexUsagePill
             this.standalonePreview = standalonePreview;
             FormBorderStyle = FormBorderStyle.None;
             AutoScaleMode = AutoScaleMode.None;
-            ClientSize = new Size(102, 29);
-            MinimumSize = ClientSize;
-            MaximumSize = ClientSize;
             ShowInTaskbar = standalonePreview;
             StartPosition = FormStartPosition.Manual;
             Text = standalonePreview ? "Codex Usage Pill Preview" : "Codex Usage Pill";
-            BackColor = Color.FromArgb(244, 251, 245);
+            Font = new Font("Segoe UI Semibold", 12f, FontStyle.Regular, GraphicsUnit.Pixel);
+            percentFont = new Font(Font.FontFamily, 11f, FontStyle.Regular, GraphicsUnit.Pixel);
             DoubleBuffered = true;
-            Padding = new Padding(1);
+            Cursor = Cursors.SizeAll;
             TrayText = "Codex Usage Pill";
-
-            label = new Label
-            {
-                Dock = DockStyle.Fill,
-                Text = "Codex —",
-                TextAlign = ContentAlignment.MiddleCenter,
-                Font = new Font("Segoe UI Semibold", 13f, FontStyle.Regular, GraphicsUnit.Pixel),
-                ForeColor = Color.FromArgb(68, 181, 91),
-                BackColor = Color.Transparent,
-                Cursor = Cursors.SizeAll
-            };
-            label.MouseDown += BeginDrag;
-            label.MouseMove += ContinueDrag;
-            label.MouseUp += EndDrag;
-            Controls.Add(label);
+            MouseDown += BeginDrag;
+            MouseMove += ContinueDrag;
+            MouseUp += EndDrag;
 
             tooltip = new ToolTip
             {
@@ -674,8 +669,8 @@ namespace CodexUsagePill
                 InitialDelay = 250,
                 ReshowDelay = 100
             };
-            tooltip.SetToolTip(label, "Reading Codex usage…");
-            UpdateRegion();
+            tooltip.SetToolTip(this, "Reading Codex usage…");
+            UpdateLayout();
         }
 
         protected override bool ShowWithoutActivation { get { return true; } }
@@ -696,11 +691,109 @@ namespace CodexUsagePill
         {
             base.OnPaint(e);
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            using (GraphicsPath path = RoundedPath(ClientRectangle, 14))
-            using (var pen = new Pen(borderColor, 1.2f))
+            if (showShort) DrawCell(e.Graphics, shortBounds, "5h", shortRemaining, false);
+            if (!mainBounds.IsEmpty)
+                DrawCell(e.Graphics, mainBounds, showShort ? "Week" : "Codex",
+                    showWeekly ? weeklyRemaining : singleRemaining, true);
+        }
+
+        private void DrawCell(Graphics graphics, Rectangle bounds, string word, int? remaining, bool vertical)
+        {
+            Color foreground;
+            Color background;
+            Color border;
+            if (!remaining.HasValue)
             {
-                e.Graphics.DrawPath(pen, path);
+                foreground = Color.FromArgb(111, 117, 116);
+                background = Color.FromArgb(246, 247, 247);
+                border = Color.FromArgb(205, 210, 209);
             }
+            else if (remaining.Value < 20)
+            {
+                foreground = Color.FromArgb(205, 64, 64);
+                background = Color.FromArgb(255, 246, 246);
+                border = Color.FromArgb(239, 183, 183);
+            }
+            else if (remaining.Value < 50)
+            {
+                foreground = Color.FromArgb(191, 133, 31);
+                background = Color.FromArgb(255, 250, 238);
+                border = Color.FromArgb(239, 213, 159);
+            }
+            else
+            {
+                foreground = Color.FromArgb(68, 181, 91);
+                background = Color.FromArgb(244, 251, 245);
+                border = Color.FromArgb(185, 226, 190);
+            }
+
+            using (GraphicsPath path = RoundedPath(bounds, 8))
+            using (var brush = new SolidBrush(background))
+            using (var pen = new Pen(border, 1.2f))
+            {
+                graphics.FillPath(brush, path);
+                graphics.DrawPath(pen, path);
+            }
+
+            using (var brush = new SolidBrush(foreground))
+            using (var format = new StringFormat
+                { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
+            {
+                if (vertical)
+                {
+                    float y = bounds.Top + 5;
+                    foreach (char letter in word)
+                    {
+                        using (GraphicsPath glyph = LetterPath(letter))
+                        {
+                            RectangleF ink = glyph.GetBounds();
+                            using (var transform = new Matrix())
+                            {
+                                transform.Translate(bounds.Left + (bounds.Width - ink.Width) / 2f - ink.Left,
+                                    y - ink.Top);
+                                glyph.Transform(transform);
+                            }
+                            graphics.FillPath(brush, glyph);
+                            y += ink.Height + 1f;
+                        }
+                    }
+                }
+                else
+                {
+                    graphics.DrawString(word, Font, brush,
+                        new RectangleF(bounds.Left, bounds.Top + 3, bounds.Width, 16), format);
+                }
+                string value = remaining.HasValue
+                    ? remaining.Value.ToString(CultureInfo.InvariantCulture) + "%" : "—";
+                graphics.DrawString(value, percentFont, brush,
+                    new RectangleF(bounds.Left, bounds.Bottom - 22, bounds.Width, 18), format);
+            }
+        }
+
+        private GraphicsPath LetterPath(char letter)
+        {
+            var path = new GraphicsPath();
+            path.AddString(letter.ToString(), Font.FontFamily, (int)Font.Style, Font.Size,
+                PointF.Empty, StringFormat.GenericTypographic);
+            return path;
+        }
+
+        private int WordHeight(string word)
+        {
+            float height = 0;
+            foreach (char letter in word)
+                using (GraphicsPath glyph = LetterPath(letter))
+                    height += glyph.GetBounds().Height + 1f;
+            return (int)Math.Ceiling(height - 1f);
+        }
+
+        private void UpdateLayout()
+        {
+            shortBounds = showShort ? new Rectangle(0, 0, 36, 40) : Rectangle.Empty;
+            mainBounds = showShort && !showWeekly ? Rectangle.Empty
+                : new Rectangle(0, showShort ? 44 : 0, 36, WordHeight(showShort ? "Week" : "Codex") + 32);
+            ClientSize = new Size(36, mainBounds.IsEmpty ? shortBounds.Bottom : mainBounds.Bottom);
+            UpdateRegion();
         }
 
         protected override void OnSizeChanged(EventArgs e)
@@ -720,15 +813,14 @@ namespace CodexUsagePill
             IsDragging = true;
             dragCursorStart = Cursor.Position;
             dragFormStart = Location;
-            label.Capture = true;
+            Capture = true;
         }
 
         private void ContinueDrag(object sender, MouseEventArgs e)
         {
             if (!IsDragging) return;
             Point cursor = Cursor.Position;
-            Location = new Point(
-                dragFormStart.X + cursor.X - dragCursorStart.X,
+            Location = new Point(dragFormStart.X + cursor.X - dragCursorStart.X,
                 dragFormStart.Y + cursor.Y - dragCursorStart.Y);
         }
 
@@ -736,77 +828,71 @@ namespace CodexUsagePill
         {
             if (!IsDragging || e.Button != MouseButtons.Left) return;
             IsDragging = false;
-            label.Capture = false;
+            Capture = false;
             EventHandler handler = DragCompleted;
             if (handler != null) handler(this, EventArgs.Empty);
         }
 
         public void ApplySnapshot(UsageSnapshot snapshot)
         {
+            showShort = snapshot.Success &&
+                (snapshot.PrimaryWindowMinutes == 300 || snapshot.SecondaryWindowMinutes == 300);
+            showWeekly = snapshot.Success &&
+                (snapshot.PrimaryWindowMinutes == 10080 || snapshot.SecondaryWindowMinutes == 10080);
+            shortRemaining = RemainingFor(snapshot, 300);
+            weeklyRemaining = RemainingFor(snapshot, 10080);
+            singleRemaining = snapshot.Success
+                ? snapshot.PrimaryRemaining ?? snapshot.SecondaryRemaining : null;
+            UpdateLayout();
+
             if (!snapshot.Success)
             {
-                label.Text = "Codex —";
-                label.ForeColor = Color.FromArgb(111, 117, 116);
-                BackColor = Color.FromArgb(246, 247, 247);
-                borderColor = Color.FromArgb(205, 210, 209);
-                tooltip.SetToolTip(label, snapshot.AuthenticationRequired
+                tooltip.SetToolTip(this, snapshot.AuthenticationRequired
                     ? "Sign in to Codex CLI first.\nRight-click the tray icon and choose ‘Sign in to Codex…’."
                     : snapshot.Error);
                 TrayText = "Codex Usage: unavailable";
-                Invalidate();
-                return;
-            }
-
-            int display = snapshot.SecondaryRemaining ?? snapshot.PrimaryRemaining ?? 0;
-            int warning = new[] { snapshot.PrimaryRemaining, snapshot.SecondaryRemaining }
-                .Where(v => v.HasValue)
-                .Select(v => v.Value)
-                .DefaultIfEmpty(display)
-                .Min();
-
-            label.Text = "Codex " + display.ToString(CultureInfo.InvariantCulture) + "%";
-            if (warning < 20)
-            {
-                label.ForeColor = Color.FromArgb(205, 64, 64);
-                BackColor = Color.FromArgb(255, 246, 246);
-                borderColor = Color.FromArgb(239, 183, 183);
-            }
-            else if (warning < 50)
-            {
-                label.ForeColor = Color.FromArgb(191, 133, 31);
-                BackColor = Color.FromArgb(255, 250, 238);
-                borderColor = Color.FromArgb(239, 213, 159);
             }
             else
             {
-                label.ForeColor = Color.FromArgb(68, 181, 91);
-                BackColor = Color.FromArgb(244, 251, 245);
-                borderColor = Color.FromArgb(185, 226, 190);
+                tooltip.SetToolTip(this, BuildTooltip(snapshot));
+                TrayText = showShort
+                    ? "Codex 5h: " + Percent(shortRemaining) +
+                        (showWeekly ? " | Week: " + Percent(weeklyRemaining) : "")
+                    : "Codex remaining: " + Percent(showWeekly ? weeklyRemaining : singleRemaining);
             }
-
-            tooltip.SetToolTip(label, BuildTooltip(snapshot));
-            TrayText = "Codex weekly remaining: " + display.ToString(CultureInfo.InvariantCulture) + "%";
             Invalidate();
+        }
+
+        private static int? RemainingFor(UsageSnapshot snapshot, int minutes)
+        {
+            if (!snapshot.Success) return null;
+            if (snapshot.PrimaryWindowMinutes == minutes) return snapshot.PrimaryRemaining;
+            if (snapshot.SecondaryWindowMinutes == minutes) return snapshot.SecondaryRemaining;
+            return null;
+        }
+
+        private static string Percent(int? remaining)
+        {
+            return remaining.HasValue ? remaining.Value.ToString(CultureInfo.InvariantCulture) + "%" : "—";
         }
 
         private static string BuildTooltip(UsageSnapshot snapshot)
         {
             var lines = new List<string>();
             if (snapshot.PrimaryRemaining.HasValue)
-                lines.Add(WindowLabel(snapshot.PrimaryWindowMinutes, "5-hour") + ": " + snapshot.PrimaryRemaining.Value + "% remaining" + ResetLabel(snapshot.PrimaryResetsAt));
+                lines.Add(WindowLabel(snapshot.PrimaryWindowMinutes) + ": " + snapshot.PrimaryRemaining.Value + "% remaining" + ResetLabel(snapshot.PrimaryResetsAt));
             if (snapshot.SecondaryRemaining.HasValue)
-                lines.Add(WindowLabel(snapshot.SecondaryWindowMinutes, "Weekly") + ": " + snapshot.SecondaryRemaining.Value + "% remaining" + ResetLabel(snapshot.SecondaryResetsAt));
+                lines.Add(WindowLabel(snapshot.SecondaryWindowMinutes) + ": " + snapshot.SecondaryRemaining.Value + "% remaining" + ResetLabel(snapshot.SecondaryResetsAt));
             lines.Add("Updated: " + snapshot.FetchedAt.ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture));
-            lines.Add("Drag the pill to move it");
+            lines.Add("Drag to move | Refresh now from the tray");
             return string.Join(Environment.NewLine, lines.ToArray());
         }
 
-        private static string WindowLabel(int? minutes, string fallback)
+        private static string WindowLabel(int? minutes)
         {
-            if (!minutes.HasValue) return fallback;
-            if (minutes.Value == 300) return "5-hour";
-            if (minutes.Value == 10080) return "Weekly";
-            return fallback;
+            if (minutes == 300) return "5-hour";
+            if (minutes == 10080) return "Weekly";
+            return minutes.HasValue ? "Usage (" + minutes.Value + " min)" : "Usage window";
         }
 
         private static string ResetLabel(long? unixSeconds)
@@ -819,9 +905,29 @@ namespace CodexUsagePill
 
         private void UpdateRegion()
         {
-            if (Width <= 0 || Height <= 0) return;
-            using (GraphicsPath path = RoundedPath(ClientRectangle, 14))
-                Region = new Region(path);
+            if (shortBounds.IsEmpty && mainBounds.IsEmpty) return;
+            using (var region = new Region())
+            {
+                region.MakeEmpty();
+                if (!shortBounds.IsEmpty)
+                    using (GraphicsPath path = RoundedPath(shortBounds, 8)) region.Union(path);
+                if (!mainBounds.IsEmpty)
+                    using (GraphicsPath path = RoundedPath(mainBounds, 8)) region.Union(path);
+                Region previous = Region;
+                Region = region.Clone();
+                if (previous != null) previous.Dispose();
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                tooltip.Dispose();
+                percentFont.Dispose();
+                Font.Dispose();
+            }
+            base.Dispose(disposing);
         }
 
         private static GraphicsPath RoundedPath(Rectangle bounds, int radius)
@@ -925,6 +1031,12 @@ namespace CodexUsagePill
 
         [DllImport("user32.dll")]
         internal static extern bool GetWindowRect(IntPtr hWnd, out Rect rect);
+
+        [DllImport("user32.dll")]
+        internal static extern bool GetClientRect(IntPtr hWnd, out Rect rect);
+
+        [DllImport("user32.dll")]
+        internal static extern bool ClientToScreen(IntPtr hWnd, ref Point point);
 
         [DllImport("user32.dll")]
         internal static extern bool GetWindowPlacement(IntPtr hWnd, ref WindowPlacement placement);

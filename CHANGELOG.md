@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented here.
 
+## 1.1.0 - 2026-10-01
+
+- Move the default indicator into the new Codex left icon rail, above the account avatar.
+- Render Codex and Week vertically with a compact 1-pixel gap between letter shapes.
+- Automatically show weekly-only or stacked five-hour and weekly layouts based on the actual account windows, including after plan changes.
+- Identify windows by duration and prefer the named Codex rate-limit bucket over the legacy response.
+- Color each window's text, background, and border independently.
+- Preserve the old horizontal position and remember vertical placement separately.
+- Add automated layout and plan-transition checks to builds and releases, plus installation guidance for every account type.
+
 ## 1.0.4 - 2026-08-07
 
 - Restore live usage refreshes with current Codex versions by writing BOM-free UTF-8 to the app server.

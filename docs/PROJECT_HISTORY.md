@@ -24,7 +24,8 @@ The first versions proved the data path and window tracking. Later iterations ad
 6. per-monitor DPI handling after Windows scaled an intended `102 × 29` layout to `136 × 39`;
 7. a final physical size of `102 × 29` pixels, matching the compact reference design;
 8. top-level window enumeration after a Codex update added a small auxiliary window that could otherwise capture the pill's position;
-9. native Windows event-triggered startup and process exit after Codex closes, without a resident watcher.
+9. native Windows event-triggered startup and process exit after Codex closes, without a resident watcher;
+10. a 36-pixel-wide vertical indicator for the new left icon rail, with 1-pixel gaps between letter shapes and automatic weekly-only or five-hour/weekly layouts based on returned window durations.
 
 ## Typography
 
@@ -32,7 +33,7 @@ Local inspection confirmed that the Codex product name uses OpenAI Sans in the c
 
 ## Public-release boundary
 
-The release contains one C# source file, one PowerShell build script, and no external runtime packages. It does not include OpenAI application resources, user credentials, generated protocol schemas, test artifacts, or private filesystem paths.
+The release download contains the executable, installer, and checksums, with no external runtime packages. The repository also includes the source, build script, and layout tests. Downloads do not include OpenAI application resources, user credentials, generated protocol schemas, test artifacts, or private filesystem paths.
 
 ## Current limitations
 
