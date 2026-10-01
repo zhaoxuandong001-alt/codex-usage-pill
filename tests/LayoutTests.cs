@@ -21,6 +21,8 @@ namespace CodexUsagePill
             {
                 using (var form = new PillForm(true))
                 {
+                    Check((float)typeof(PillForm).GetField("LetterGap", BindingFlags.Static | BindingFlags.NonPublic)
+                        .GetRawConstantValue() == 3f, "three-pixel letter spacing");
                     UsageSnapshot weekly = Parse("{\"rateLimits\":{\"primary\":{\"usedPercent\":31,\"windowDurationMins\":10080},\"secondary\":null}}");
                     form.ApplySnapshot(weekly);
                     Check(form.TrayText == "Codex remaining: 69%", "weekly-only percentage");

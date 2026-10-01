@@ -5,7 +5,7 @@ All notable changes to this project are documented here.
 ## 1.1.0 - 2026-10-01
 
 - Move the default indicator into the new Codex left icon rail, above the account avatar.
-- Render Codex and Week vertically with a compact 1-pixel gap between letter shapes.
+- Render Codex and Week vertically with a 3-pixel gap between letter shapes for a taller, less compressed appearance.
 - Automatically show weekly-only or stacked five-hour and weekly layouts based on the actual account windows, including after plan changes.
 - Identify windows by duration and prefer the named Codex rate-limit bucket over the legacy response.
 - Color each window's text, background, and border independently.

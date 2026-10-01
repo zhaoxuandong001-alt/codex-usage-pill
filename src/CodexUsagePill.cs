@@ -629,6 +629,7 @@ namespace CodexUsagePill
 
     internal sealed class PillForm : Form
     {
+        private const float LetterGap = 3f;
         private readonly ToolTip tooltip;
         private readonly bool standalonePreview;
         private readonly Font percentFont;
@@ -754,7 +755,7 @@ namespace CodexUsagePill
                                 glyph.Transform(transform);
                             }
                             graphics.FillPath(brush, glyph);
-                            y += ink.Height + 1f;
+                            y += ink.Height + LetterGap;
                         }
                     }
                 }
@@ -783,8 +784,8 @@ namespace CodexUsagePill
             float height = 0;
             foreach (char letter in word)
                 using (GraphicsPath glyph = LetterPath(letter))
-                    height += glyph.GetBounds().Height + 1f;
-            return (int)Math.Ceiling(height - 1f);
+                    height += glyph.GetBounds().Height + LetterGap;
+            return (int)Math.Ceiling(height - LetterGap);
         }
 
         private void UpdateLayout()

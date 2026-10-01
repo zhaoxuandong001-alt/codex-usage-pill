@@ -25,7 +25,7 @@ The first versions proved the data path and window tracking. Later iterations ad
 7. a final physical size of `102 × 29` pixels, matching the compact reference design;
 8. top-level window enumeration after a Codex update added a small auxiliary window that could otherwise capture the pill's position;
 9. native Windows event-triggered startup and process exit after Codex closes, without a resident watcher;
-10. a 36-pixel-wide vertical indicator for the new left icon rail, with 1-pixel gaps between letter shapes and automatic weekly-only or five-hour/weekly layouts based on returned window durations.
+10. a 36-pixel-wide vertical indicator for the new left icon rail, with automatic weekly-only or five-hour/weekly layouts based on returned window durations. Letter gaps were increased from 1 to 3 pixels after visual feedback to give Codex and Week a taller, less compressed appearance.
 
 ## Typography
 
