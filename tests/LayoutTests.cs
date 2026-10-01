@@ -23,6 +23,10 @@ namespace CodexUsagePill
                 {
                     Check((float)typeof(PillForm).GetField("LetterGap", BindingFlags.Static | BindingFlags.NonPublic)
                         .GetRawConstantValue() == 3f, "three-pixel letter spacing");
+                    Check((string)typeof(PillForm).GetField("SingleLabel", BindingFlags.Static | BindingFlags.NonPublic)
+                        .GetRawConstantValue() == "CODEX", "uppercase single-window label");
+                    Check((string)typeof(PillForm).GetField("WeeklyLabel", BindingFlags.Static | BindingFlags.NonPublic)
+                        .GetRawConstantValue() == "WEEK", "uppercase weekly label");
                     UsageSnapshot weekly = Parse("{\"rateLimits\":{\"primary\":{\"usedPercent\":31,\"windowDurationMins\":10080},\"secondary\":null}}");
                     form.ApplySnapshot(weekly);
                     Check(form.TrayText == "Codex remaining: 69%", "weekly-only percentage");

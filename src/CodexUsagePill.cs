@@ -630,6 +630,8 @@ namespace CodexUsagePill
     internal sealed class PillForm : Form
     {
         private const float LetterGap = 3f;
+        private const string SingleLabel = "CODEX";
+        private const string WeeklyLabel = "WEEK";
         private readonly ToolTip tooltip;
         private readonly bool standalonePreview;
         private readonly Font percentFont;
@@ -692,9 +694,9 @@ namespace CodexUsagePill
         {
             base.OnPaint(e);
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            if (showShort) DrawCell(e.Graphics, shortBounds, "5h", shortRemaining, false);
+            if (showShort) DrawCell(e.Graphics, shortBounds, "5H", shortRemaining, false);
             if (!mainBounds.IsEmpty)
-                DrawCell(e.Graphics, mainBounds, showShort ? "Week" : "Codex",
+                DrawCell(e.Graphics, mainBounds, showShort ? WeeklyLabel : SingleLabel,
                     showWeekly ? weeklyRemaining : singleRemaining, true);
         }
 
@@ -792,7 +794,7 @@ namespace CodexUsagePill
         {
             shortBounds = showShort ? new Rectangle(0, 0, 36, 40) : Rectangle.Empty;
             mainBounds = showShort && !showWeekly ? Rectangle.Empty
-                : new Rectangle(0, showShort ? 44 : 0, 36, WordHeight(showShort ? "Week" : "Codex") + 32);
+                : new Rectangle(0, showShort ? 44 : 0, 36, WordHeight(showShort ? WeeklyLabel : SingleLabel) + 32);
             ClientSize = new Size(36, mainBounds.IsEmpty ? shortBounds.Bottom : mainBounds.Bottom);
             UpdateRegion();
         }

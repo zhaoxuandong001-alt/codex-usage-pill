@@ -15,7 +15,7 @@ A tiny, unofficial Windows sidebar overlay that shows Codex usage remaining and 
 - Automatically switches layouts after plan upgrades, downgrades, or changes to the account's usage windows.
 - Remains visible when you work on another monitor, but stays below any window that covers Codex.
 - Uses a 36-pixel-wide indicator that starts in the left icon rail, above the account avatar, and can be dragged inside the Codex window.
-- Stacks each letter of `Codex` and `Week` with a 3-pixel gap between the visible letter shapes; percentages remain horizontal.
+- Uses uppercase `CODEX`, `WEEK`, and `5H` inside the indicator. Stacks each letter of `CODEX` and `WEEK` with a 3-pixel gap between the visible letter shapes; percentages remain horizontal.
 - Remembers its position between launches.
 - Shows 5-hour and weekly windows, reset times, and last refresh time on hover.
 - Changes each window's text, background, and border independently from green to amber below 50% and red below 20%.
