@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## 1.1.0 - 2026-10-01
+## 1.1.0 - 2026-10-05
 
 - Move the default indicator into the new Codex left icon rail, above the account avatar.
 - Render CODEX and WEEK vertically with a 3-pixel gap between letter shapes for a taller, less compressed appearance; use uppercase 5H for the short-window label.

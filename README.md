@@ -10,8 +10,8 @@ A tiny, unofficial Windows sidebar overlay that shows Codex usage remaining and 
 
 ## Features
 
-- Shows a compact vertical `Codex` indicator when only a weekly usage window is available.
-- Shows a `5h` indicator above a vertical `Week` indicator when five-hour and weekly windows are available.
+- Shows a compact vertical `CODEX` indicator when only a weekly usage window is available.
+- Shows a `5H` indicator above a vertical `WEEK` indicator when five-hour and weekly windows are available.
 - Automatically switches layouts after plan upgrades, downgrades, or changes to the account's usage windows.
 - Remains visible when you work on another monitor, but stays below any window that covers Codex.
 - Uses a 36-pixel-wide indicator that starts in the left icon rail, above the account avatar, and can be dragged inside the Codex window.
@@ -55,9 +55,9 @@ Install the same executable and installer for every supported account. You do no
 
 | Windows reported by Codex | Layout selected automatically |
 | --- | --- |
-| Weekly only, with no five-hour window | Vertical `Codex`, followed by the weekly remaining percentage |
-| Five-hour and weekly | `5h` and its remaining percentage above vertical `Week` and its remaining percentage |
-| Five-hour only | `5h` and its remaining percentage |
+| Weekly only, with no five-hour window | Vertical `CODEX`, followed by the weekly remaining percentage |
+| Five-hour and weekly | `5H` and its remaining percentage above vertical `WEEK` and its remaining percentage |
+| Five-hour only | `5H` and its remaining percentage |
 | Usage unavailable | Gray indicator with a dash and an explanation on hover |
 
 The tool uses the actual window durations returned by Codex (300 minutes and 10,080 minutes), rather than guessing from the plan name or the order of the windows. After a plan upgrade or downgrade, it adjusts on the next successful refresh (every five minutes). Use **Refresh now** from the tray to check immediately. A missing window is not displayed as 0% or 100%.
@@ -71,7 +71,7 @@ Download the new release files and run the same installer again. It replaces the
 Copy this prompt if someone is helping you install the tool:
 
 ```text
-Install the latest published release of zhaoxuandong001-alt/codex-usage-pill on this Windows computer. Download CodexUsagePill.exe, install.ps1, and SHA256SUMS.txt from the same release, verify both file checksums, and run the installer. Use the one automatic-layout build: no five-hour limit means vertical Codex plus the weekly remaining percentage; five-hour and weekly limits mean 5h above vertical Week, each with its own remaining percentage. Do not select a build based on Plus or Pro alone. Confirm that the indicator starts with Codex, appears in the left icon rail above the avatar, can be dragged, and shows the actual account windows. Plan changes should adjust the layout on the next refresh without reinstalling. Keep credentials in Codex's own sign-in flow.
+Install the latest published release of zhaoxuandong001-alt/codex-usage-pill on this Windows computer. Download CodexUsagePill.exe, install.ps1, and SHA256SUMS.txt from the same release, verify both file checksums, and run the installer. Use the one automatic-layout build: no five-hour limit means vertical CODEX plus the weekly remaining percentage; five-hour and weekly limits mean 5H above vertical WEEK, each with its own remaining percentage. Do not select a build based on Plus or Pro alone. Confirm that the indicator starts with Codex, appears in the left icon rail above the avatar, can be dragged, and shows the actual account windows. Plan changes should adjust the layout on the next refresh without reinstalling. Keep credentials in Codex's own sign-in flow.
 ```
 
 ### Manual use
@@ -134,7 +134,7 @@ Useful diagnostic switches:
 - Check the hidden-icons area of the Windows taskbar for the green `C` icon.
 - Right-click the tray icon and choose **Reset position**.
 
-**The pill shows `Codex —`**
+**The pill shows `CODEX —`**
 
 - Right-click the tray icon and choose **Sign in to Codex…**.
 - Confirm `codex.exe` is installed by running `codex --version` in PowerShell.
